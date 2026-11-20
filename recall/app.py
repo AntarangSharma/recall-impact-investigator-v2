@@ -38,6 +38,7 @@ REASON_LABEL = {
     "unsupported_format": "Unsupported identifier format",
     "incomplete_source": "Source incomplete",
     "outside_brand_coverage": "Outside brand coverage",
+    "ambiguous_model": "Enter a single model",
     "brand_conflict": "Conflicting brand and model",
     "changed_source": "Snapshot superseded or pending review",
     "extraction_failed": "Extraction could not be validated",
@@ -56,7 +57,6 @@ def review(store: Store, key: str) -> dict[str, Any]:
         when = datetime.fromisoformat(row["observed_at"]) if row["observed_at"] else None
         if snap and when:
             snap = snap.model_copy(update={"retrieved_at": when})
-        changed = bool(row["head_hash"] and row["head_hash"] != row["hash"])
         source_by_id[notice_id] = {
             "id": notice_id,
             "brand": NOTICES[notice_id].brand,
@@ -65,7 +65,7 @@ def review(store: Store, key: str) -> dict[str, Any]:
             "retrieved_at": row["observed_at"],
             "date": when.strftime("%b %d, %Y UTC") if when else "",
             "stale": snap.stale if snap else False,
-            "issue": "changed_source" if changed else row["issue"],
+            "issue": "changed_source" if row["superseded"] else row["issue"],
             "detail": row["detail"],
         }
     by_stock: dict[str, list[dict[str, Any]]] = {}

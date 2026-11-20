@@ -15,7 +15,7 @@ make demo
 
 Open [localhost:8000](http://127.0.0.1:8000), then select **Open sample investigation**. You can also upload [the synthetic inventory CSV](data/demo.csv) and select **Secura**. The first run produces one affected unit, one exclusion specific to this notice, and a date-code request for `DEMO-003`. Enter `1901` to resume. The review then has two affected units and one exclusion. Expand a unit for the evidence and source version, or download a CSV or the supplier drafts. See the [three-minute walkthrough](docs/demo.md) for a restart during this flow.
 
-The CSV accepts `stock_id`, `brand`, `model`, `location`, and optional `date_code` and `serial_number` fields. It supports up to 400 units and 256 KB. Each row describes one stock unit. Identifier strings preserve zeros and punctuation. The review reports malformed rows and distinguishes blank cells from absent optional fields.
+The CSV accepts `stock_id`, `brand`, `model`, `location`, and optional `date_code` and `serial_number` fields. It supports up to 400 units and 256 KB. Each row describes one stock unit. Identifier strings preserve zeros and punctuation. The review reports malformed rows and distinguishes blank cells from absent optional fields. Model placeholders such as `N/A` and values that combine models with a slash prompt a request to confirm the model.
 
 ## How it works
 
@@ -91,7 +91,7 @@ The app stores SQLite state in `.runtime/` locally. Set `RECALL_DATA_DIR` for an
 | [Cosori 23-130](https://www.cpsc.gov/Recalls/2023/Two-Million-COSORI-Air-Fryers-Recalled-by-Atekcity-Due-to-Fire-and-Burn-Hazards) | The 21 models enumerated in the description. |
 | [Insignia 24-159](https://www.cpsc.gov/Recalls/2024/Best-Buy-Recalls-Insignia-Air-Fryers-and-Air-Fryer-Ovens-Due-to-Fire-Burn-and-Laceration-Hazards) | The six models enumerated in the description. |
 
-Version one covers the reviewed English text of these three U.S. air fryer and air fryer oven notices. An exclusion applies to one notice version. Other notices, manufacturer-only materials, photos, and incompatible serial formats are outside that conclusion. A changed snapshot invalidates prior live findings and awaits source review. A failed fetch leaves earlier investigations intact and puts the new attempt in an incomplete state. The matcher supports fixed-width serial ranges, tested with a synthetic rule because these three notices do not establish one.
+Version one covers the reviewed English text of these three U.S. air fryer and air fryer oven notices. An exclusion applies to one notice version. Other notices, manufacturer-only materials, photos, and incompatible serial formats are outside that conclusion. Changes to the Recall Details section invalidate prior live findings and require source review. Investigations created with the older, partial source captures are marked as superseded. Start a fresh investigation and regenerate any inventory exports derived from them. A failed fetch leaves earlier investigations intact and puts the new attempt in an incomplete state. The matcher supports fixed-width serial ranges, tested with a synthetic rule because these three notices do not establish one.
 
 CPSC is the source of the excerpts in [the retained snapshots](data/notices). Those files preserve the source URLs, retrieval time, response hashes, and CPSC's commissioner statement note. [CPSC Recall API guide](https://www.cpsc.gov/Recalls/CPSC-Recalls-Application-Program-Interface-API-Information)
 

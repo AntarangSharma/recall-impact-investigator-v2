@@ -11,7 +11,7 @@ from pathlib import Path
 from recall.criteria import Criteria, Finding
 from recall.inventory import Inventory, Stock
 from recall.model import CALL_LIMIT, DEFAULT_BUDGET, BudgetError
-from recall.sources import Snapshot
+from recall.sources import SCOPE_VERSION, Snapshot
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS investigations (
@@ -64,6 +64,17 @@ CREATE TABLE IF NOT EXISTS model_usage (
 );
 """
 
+COVERAGE_QUERY = """
+SELECT c.*, s.payload AS snapshot,
+       ((s.payload IS NOT NULL AND
+         coalesce(json_extract(s.payload, '$.scope_version'), 1) <> :scope_version)
+        OR (h.hash IS NOT NULL AND h.hash IS NOT c.hash)) AS superseded
+FROM coverage c JOIN investigations i ON i.id=c.investigation
+LEFT JOIN snapshots s ON c.notice_id=s.notice_id AND c.hash=s.hash
+LEFT JOIN live_heads h ON c.notice_id=h.notice_id AND i.mode='live'
+WHERE c.investigation=:key ORDER BY c.rowid
+"""
+
 
 def now() -> str:
     return datetime.now(UTC).isoformat()
@@ -77,6 +88,15 @@ class Store:
         self.runner = directory / "runner.sqlite"
         with self.connection() as db:
             db.executescript(SCHEMA)
+            # Retire prior results whose source capture omitted parts of the notice.
+            db.execute(
+                """UPDATE findings SET invalidated_at=? WHERE invalidated_at IS NULL AND EXISTS (
+                    SELECT 1 FROM snapshots s
+                    WHERE s.notice_id=findings.notice_id AND s.hash=findings.hash
+                      AND coalesce(json_extract(s.payload, '$.scope_version'), 1) <> ?
+                )""",
+                (now(), SCOPE_VERSION),
+            )
 
     @contextmanager
     def connection(self) -> Iterator[sqlite3.Connection]:
@@ -221,22 +241,33 @@ class Store:
     def coverage(self, key: str) -> list[sqlite3.Row]:
         with self.connection() as db:
             return db.execute(
-                """SELECT c.*, s.payload AS snapshot, h.hash AS head_hash
-                FROM coverage c JOIN investigations i ON i.id=c.investigation
-                LEFT JOIN snapshots s ON c.notice_id=s.notice_id AND c.hash=s.hash
-                LEFT JOIN live_heads h ON c.notice_id=h.notice_id AND i.mode='live'
-                WHERE c.investigation=? ORDER BY c.rowid""",
-                (key,),
+                COVERAGE_QUERY, {"key": key, "scope_version": SCOPE_VERSION}
             ).fetchall()
 
     def save_findings(self, key: str, rows: list[tuple[str, str, str | None, Finding]]) -> None:
         with self.connection() as db:
+            # The refresh and finding writes must observe the same ordering across processes.
+            db.execute("BEGIN IMMEDIATE")
+            superseded = {
+                row["notice_id"]
+                for row in db.execute(COVERAGE_QUERY, {"key": key, "scope_version": SCOPE_VERSION})
+                if row["superseded"]
+            }
+            invalidated_at = now()
             db.executemany(
-                """INSERT INTO findings (investigation, stock_id, notice_id, hash, payload)
-                VALUES (?, ?, ?, ?, ?) ON CONFLICT(investigation, stock_id, notice_id)
-                DO UPDATE SET payload=excluded.payload WHERE findings.invalidated_at IS NULL""",
+                """INSERT INTO findings (investigation, stock_id, notice_id, hash, payload, invalidated_at)
+                VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(investigation, stock_id, notice_id)
+                DO UPDATE SET payload=excluded.payload, invalidated_at=excluded.invalidated_at
+                WHERE findings.invalidated_at IS NULL""",
                 [
-                    (key, stock_id, notice, digest, result.model_dump_json())
+                    (
+                        key,
+                        stock_id,
+                        notice,
+                        digest,
+                        result.model_dump_json(),
+                        invalidated_at if notice in superseded else None,
+                    )
                     for stock_id, notice, digest, result in rows
                 ],
             )

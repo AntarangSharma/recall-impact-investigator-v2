@@ -1,5 +1,6 @@
 import asyncio
 from datetime import UTC, datetime, timedelta
+from html import escape
 
 import httpx
 import pytest
@@ -18,7 +19,7 @@ from recall.criteria import (
 )
 from recall.inventory import MAX_ROWS, Stock, identifier, parse_inventory
 from recall.model import scripted
-from recall.sources import NOTICES, SourceError, fetch, load_fixture, sha
+from recall.sources import NOTICES, SourceError, fetch, load_fixture, retrieve, sha
 from scripts.evaluate import run
 
 
@@ -85,6 +86,59 @@ def test_hostile_notice_is_untrusted_and_versioned():
     with pytest.raises(SourceError, match="changed"):
         authority(altered, "Secura")
     assert altered.source_hash != original.source_hash
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        """<div class="recall-product__details-fields"><div class="view-rows">
+        <div class="recall-product__field-title">Additional affected models:</div>
+        SAF-99</div></div>""",
+        "<p>Additional affected model SAF-99</p>",
+    ],
+)
+def test_new_recall_detail_changes_version_with_same_description(extra, monkeypatch):
+    notice = NOTICES["23-794"]
+    description = load_fixture(notice.id).text.splitlines()[1].removeprefix("Description: ")
+
+    def response_for(extra_detail):
+        def handler(request):
+            if str(request.url) == notice.api_url:
+                return httpx.Response(
+                    200,
+                    json=[
+                        {
+                            "RecallNumber": "23794",
+                            "URL": notice.url,
+                            "Description": description,
+                        }
+                    ],
+                )
+            assert str(request.url) == notice.url
+            fields = {
+                "Description": description,
+                "Remedy": "Contact the supplier.",
+                "Sold At": "Retailers.",
+                "Recall number": notice.id,
+            }
+            rows = "".join(
+                f'<div class="view-rows"><div class="recall-product__field-title">'
+                f"{name}:</div>{escape(value)}</div>"
+                for name, value in fields.items()
+            )
+            html = f'<h1>Secura recall</h1><div class="recall-product__details">{rows}{extra_detail}</div>'
+            return httpx.Response(200, text=html, headers={"Content-Type": "text/html"})
+
+        return asyncio.run(retrieve(notice, httpx.MockTransport(handler)))
+
+    reviewed = response_for("")
+    changed = response_for(extra)
+    monkeypatch.setattr("recall.criteria.load_fixture", lambda _: reviewed)
+    assert authority(reviewed, notice.brand).groups
+    assert "SAF-99" in changed.text
+    assert changed.source_hash != reviewed.source_hash
+    with pytest.raises(SourceError, match="changed"):
+        authority(changed, notice.brand)
 
 
 def test_inclusive_fixed_width_serial_range_and_and_predicates():

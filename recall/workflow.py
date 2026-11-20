@@ -16,7 +16,7 @@ from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command, interrupt
 
 from recall.criteria import AFFECTED, NEEDS, Criteria, Finding, authority, match, validate_proposal
-from recall.inventory import identifier
+from recall.inventory import identifier, model_identifier
 from recall.model import BudgetError, Model, ModelError, explanation_options, scripted
 from recall.sources import NOTICES, Snapshot, SourceError, load_fixture, retrieve
 from recall.store import Store
@@ -32,13 +32,13 @@ class State(TypedDict, total=False):
 
 PICKUP_HELP = {
     "date_code": "Read the four-digit code from the label on the underside.",
-    "model": "Read the full model from the product label, including punctuation and suffixes.",
+    "model": "Enter one model from the product label, including punctuation and suffixes.",
     "serial_number": "Read the full serial from the product label, including leading zeros.",
 }
 
 
 def checked_answer(field: str, raw: str) -> str:
-    kind, canonical = identifier(raw)
+    kind, canonical = model_identifier(raw) if field == "model" else identifier(raw)
     if kind != "valid" or (
         field == "date_code" and (len(canonical) != 4 or not canonical.isdigit())
     ):
@@ -217,12 +217,15 @@ class Action:
                 notice_id = source["notice_id"]
                 if notice_id in invalidated:
                     continue
+                issue = "changed_source" if source["superseded"] else source["issue"]
                 criteria = (
-                    Criteria.model_validate_json(source["criteria"]) if source["criteria"] else None
+                    Criteria.model_validate_json(source["criteria"])
+                    if source["criteria"] and not source["superseded"]
+                    else None
                 )
                 brand = NOTICES[notice_id].brand
                 if refresh_only and refresh_only != "model":
-                    model = identifier(stock.model)[1]
+                    model = model_identifier(stock.model)[1]
                     if (
                         not criteria
                         or stock.brand.casefold() != brand.casefold()
@@ -235,7 +238,7 @@ class Action:
                         )
                     ):
                         continue
-                result = match(stock, brand, criteria, source["issue"])
+                result = match(stock, brand, criteria, issue)
                 rows.append((stock.stock_id, notice_id, source["hash"], result))
         self.explain(rows, state.get("request_id"))
         self.store.save_findings(self.key, rows)

@@ -20,6 +20,7 @@ API = "https://www.saferproducts.gov/RestWebServices/Recall"
 ORIGINS = {"cpsc.gov", "www.cpsc.gov", "saferproducts.gov", "www.saferproducts.gov"}
 MAX_RESPONSE = 512_000
 MAX_SOURCE_CHARS = 8_000
+SCOPE_VERSION = 2
 
 
 @dataclass(frozen=True)
@@ -73,6 +74,7 @@ class Snapshot(BaseModel):
     html_hash: str
     api_hash: str
     text: str
+    scope_version: int = 1
 
     @property
     def stale(self) -> bool:
@@ -140,27 +142,31 @@ def extract_html(html: bytes) -> tuple[str, str, str]:
     soup = BeautifulSoup(html, "html.parser")
     for element in soup.select("script, style, template, noscript"):
         element.decompose()
+    title = soup.select_one("h1")
+    sections = soup.select(".recall-product__details")
+    if title is None or len(sections) != 1:
+        raise SourceError("The CPSC title or recall details could not be identified.")
+    details = sections[0]
     fields: dict[str, str] = {}
-    description = ""
-    for box in soup.select(".recall-product__details .recall-product__details-fields .view-rows"):
-        heading = box.select_one(".recall-product__field-title")
+    for box in details.select(".view-rows"):
+        heading = box.select_one(":scope > .recall-product__field-title")
         if heading is None:
             continue
         label = normalize(heading.get_text()).rstrip(":")
-        heading.decompose()
-        value = normalize(box.get_text(" "))
-        if label and value:
-            if label in fields:
-                raise SourceError("CPSC returned duplicate notice sections.")
-            fields[label] = value
+        if label in fields:
+            raise SourceError("CPSC returned duplicate notice sections.")
+        index = box.index(heading)
+        heading.extract()
+        fields[label] = normalize(box.get_text(" "))
         if label == "Description":
-            description = value
-    title = soup.select_one("h1")
-    if not title or not description:
-        raise SourceError("The CPSC title or matching description is missing.")
-    selected = [f"Description: {description}"]
+            # Keep the matching description on its own line without duplicating evidence quotes.
+            box.decompose()
+        else:
+            box.insert(index, heading)
+    description = section(fields, "Description")
     for label in ("Remedy", "Sold At", "Recall number"):
-        selected.append(f"{label}: {section(fields, label)}")
+        section(fields, label)
+    selected = [f"Description: {description}", normalize(details.get_text(" "))]
     note = soup.select_one("#block-recallcommissionerstatement")
     if note:
         selected.append(normalize(note.get_text(" ")))
@@ -209,6 +215,7 @@ def read_response(
         html_hash=sha(html),
         api_hash=sha(api_body),
         text=text,
+        scope_version=SCOPE_VERSION,
     )
 
 

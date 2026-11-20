@@ -3,6 +3,7 @@ import io
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 
+import pytest
 from fastapi.testclient import TestClient
 
 from recall.app import create_app
@@ -10,6 +11,7 @@ from recall.criteria import AFFECTED, EXCLUDED, NEEDS
 from recall.model import BudgetError, Model, ModelError, scripted
 from recall.sources import DATA, SourceError, load_fixture, sha
 from recall.store import Store
+from recall.workflow import Action
 
 DEMO = (DATA / "demo.csv").read_bytes()
 
@@ -150,8 +152,6 @@ def test_model_failures_and_budget_stay_unresolved(monkeypatch, tmp_path):
 
 
 def test_answer_recovers_request_saved_before_interrupt(tmp_path, monkeypatch):
-    from recall.workflow import Action
-
     original = Action.wait_for_identifier
 
     def crash_after_request(self, state):
@@ -199,3 +199,76 @@ def test_changed_unrelated_notice_preserves_active_request(monkeypatch, tmp_path
         answered = client.post(f"{path}/answers/{request['id']}", data={"value": "1901"}).json()
         assert answered["totals"][AFFECTED] == 2
         assert answered["requests"][0]["answer"] == "1901"
+
+
+@pytest.mark.parametrize(
+    ("model", "reason"),
+    [(" N/A ", "missing"), ("unknown", "missing"), ("SAF-53D/TXG-DT16E", "ambiguous_model")],
+)
+def test_model_placeholders_and_compounds_require_clarification(tmp_path, model, reason):
+    raw = f"stock_id,brand,model,location,date_code\nX,Secura,{model},floor,1901\n".encode()
+    with TestClient(create_app(tmp_path)) as client:
+        response = start(client, raw)
+        assert response.status_code == 201
+        result = response.json()
+        finding = result["units"][0]["findings"][0]
+        assert (finding["status"], finding["reason"]) == (NEEDS, reason)
+        request = result["requests"][0]
+        assert request["field"] == "model"
+        path = f"/api/investigations/{result['id']}/answers/{request['id']}"
+        assert client.post(path, data={"value": model}).status_code == 422
+        answered = client.post(path, data={"value": "TXG-DT16E"}).json()
+        assert answered["totals"] == {AFFECTED: 1, EXCLUDED: 0, NEEDS: 0}
+
+
+def test_restart_cannot_publish_findings_from_superseded_coverage(tmp_path, monkeypatch):
+    snapshot = load_fixture("23-794")
+
+    async def fake_pull(notices):
+        return [snapshot]
+
+    def stop_before_matching(self, state):
+        raise RuntimeError("Simulated interruption after recording source coverage.")
+
+    lookup = Action.lookup_inventory
+    monkeypatch.setenv("OPENAI_API_KEY", "mock")
+    monkeypatch.setattr("recall.workflow.pull", fake_pull)
+    monkeypatch.setattr(Model, "extract", lambda self, snapshot: scripted(snapshot))
+    monkeypatch.setattr(Model, "explain", lambda self, groups: [group[0] for group in groups])
+    monkeypatch.setattr(Action, "lookup_inventory", stop_before_matching)
+    with TestClient(create_app(tmp_path), raise_server_exceptions=False) as client:
+        assert start(client, mode="live").status_code == 500
+
+    store = Store(tmp_path)
+    key = store.recent()[0]["id"]
+    assert store.coverage(key)[0]["hash"] == snapshot.source_hash
+    assert not store.findings(key)
+    text = snapshot.text + "\nAdditional models were recalled."
+    store.cache(
+        snapshot.model_copy(update={"text": text, "source_hash": sha(text.encode())}), live=True
+    )
+    monkeypatch.setattr(Action, "lookup_inventory", lookup)
+    with TestClient(create_app(tmp_path)) as client:
+        resumed = start(client, mode="live").json()
+        assert resumed["id"] == key
+        assert resumed["sources"][0]["issue"] == "changed_source"
+        assert resumed["totals"] == {AFFECTED: 0, EXCLUDED: 0, NEEDS: 3}
+        assert not resumed["requests"] and not resumed["drafts"]
+        export = client.get(f"/investigations/{key}/export.csv")
+        assert {row["finding"] for row in csv.DictReader(io.StringIO(export.text))} == {NEEDS}
+    assert all(row["invalidated_at"] for row in store.findings(key))
+
+
+def test_existing_findings_with_legacy_source_capture_are_retired(tmp_path):
+    with TestClient(create_app(tmp_path)) as client:
+        result = start(client).json()
+        key = result["id"]
+        assert result["totals"][EXCLUDED] == 1
+    # Old snapshot payloads have no scope version field.
+    with Store(tmp_path).connection() as db:
+        db.execute("UPDATE snapshots SET payload=json_remove(payload, '$.scope_version')")
+    with TestClient(create_app(tmp_path)) as client:
+        review = client.get(f"/api/investigations/{key}").json()
+        assert review["sources"][0]["issue"] == "changed_source"
+        assert review["totals"] == {AFFECTED: 0, EXCLUDED: 0, NEEDS: 3}
+        assert all(unit["findings"][0]["invalidated"] for unit in review["units"])

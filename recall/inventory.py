@@ -12,6 +12,19 @@ MAX_ROWS = 400
 REQUIRED = {"stock_id", "brand", "model", "location"}
 OPTIONAL = {"date_code", "serial_number"}
 IDENTIFIER = re.compile(r"[A-Za-z0-9]+(?:[./_-][A-Za-z0-9]+)*")
+UNRECORDED_MODELS = {
+    "N/A",
+    "N.A.",
+    "NA",
+    "NONE",
+    "NOT APPLICABLE",
+    "NOT AVAILABLE",
+    "NOT PROVIDED",
+    "NULL",
+    "TBD",
+    "UNK",
+    "UNKNOWN",
+}
 FORBIDDEN = chr(0x2014)
 
 
@@ -39,6 +52,16 @@ def identifier(value: str | None) -> tuple[str, str]:
     if len(value) > 64 or not IDENTIFIER.fullmatch(value):
         return "malformed", ""
     return "valid", value.upper()
+
+
+def model_identifier(value: str | None) -> tuple[str, str]:
+    if value is not None and value.strip().upper() in UNRECORDED_MODELS:
+        return "missing", ""
+    kind, model = identifier(value)
+    # Slash-separated values in this notice catalog may combine a model and its alias.
+    if kind == "valid" and "/" in model:
+        return "ambiguous_model", ""
+    return kind, model
 
 
 def parse_inventory(raw: bytes) -> Inventory:
@@ -92,9 +115,11 @@ def parse_inventory(raw: bytes) -> Inventory:
             else:
                 seen[stock_key] = line
                 units.append(unit)
-            for key in ("model", "date_code", "serial_number"):
+            if model_identifier(unit.model)[0] != "valid":
+                errors.append(f"Line {line}: verify the single model printed on the unit.")
+            for key in ("date_code", "serial_number"):
                 status, _ = identifier(getattr(unit, key))
-                if status == "malformed" or (key == "model" and status == "empty"):
+                if status == "malformed":
                     errors.append(
                         f"Line {line}: {key} is {status}. Review the identifier on the unit."
                     )

@@ -6,8 +6,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
-from recall.inventory import FORBIDDEN, Stock, identifier
-from recall.sources import Snapshot, SourceError, load_fixture, sha
+from recall.inventory import FORBIDDEN, Stock, identifier, model_identifier
+from recall.sources import SCOPE_VERSION, Snapshot, SourceError, load_fixture, sha
 
 AFFECTED: Literal["affected_by_notice"] = "affected_by_notice"
 EXCLUDED: Literal["excluded_by_notice"] = "excluded_by_notice"
@@ -79,7 +79,10 @@ class SourceRules:
 def authority(snapshot: Snapshot, brand: str) -> SourceRules:
     if snapshot.source_hash != sha(snapshot.text.encode()):
         raise SourceError("The stored text did not match the source hash.")
-    if snapshot.source_hash != load_fixture(snapshot.notice_id).source_hash:
+    if (
+        snapshot.scope_version != SCOPE_VERSION
+        or snapshot.source_hash != load_fixture(snapshot.notice_id).source_hash
+    ):
         raise SourceError("The notice changed. Its new snapshot requires a source review.")
     text = snapshot.text.splitlines()[1].removeprefix("Description: ")
     sentence = text.partition(". ")[0].rstrip(".")
@@ -212,7 +215,7 @@ def match(stock: Stock, brand: str, criteria: Criteria | None, issue: str = "") 
     if criteria is None or not criteria.rules:
         return Finding(status=NEEDS, reason=issue or "criteria_unavailable")
     all_evidence = [rule.evidence for rule in criteria.rules]
-    kind, model = identifier(stock.model)
+    kind, model = model_identifier(stock.model)
     brand_matches = stock.brand.strip().casefold() == brand.casefold()
     if kind != "valid":
         return Finding(
