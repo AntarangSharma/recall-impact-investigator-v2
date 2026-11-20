@@ -172,3 +172,30 @@ def test_answer_recovers_request_saved_before_interrupt(tmp_path, monkeypatch):
         assert response.status_code == 200
         assert response.json()["totals"] == {AFFECTED: 2, EXCLUDED: 1, NEEDS: 0}
         assert len(response.json()["requests"]) == 1
+
+
+def test_changed_unrelated_notice_preserves_active_request(monkeypatch, tmp_path):
+    monkeypatch.setenv("OPENAI_API_KEY", "mock")
+
+    async def fake_pull(notices):
+        return [load_fixture(notice_id) for notice_id in notices]
+
+    monkeypatch.setattr("recall.workflow.pull", fake_pull)
+    monkeypatch.setattr(Model, "extract", lambda self, snapshot: scripted(snapshot))
+    monkeypatch.setattr(Model, "explain", lambda self, groups: [group[0] for group in groups])
+    with TestClient(create_app(tmp_path)) as client:
+        result = start(client, mode="live", scope="all").json()
+        request = result["requests"][0]
+        cosori = load_fixture("23-130")
+        revised = cosori.text + "\nUpdated description."
+        Store(tmp_path).cache(
+            cosori.model_copy(update={"text": revised, "source_hash": sha(revised.encode())}),
+            live=True,
+        )
+        path = f"/api/investigations/{result['id']}"
+        refreshed = client.get(path).json()
+        assert not refreshed["superseded_request"]
+        assert refreshed["requests"][0]["id"] == request["id"]
+        answered = client.post(f"{path}/answers/{request['id']}", data={"value": "1901"}).json()
+        assert answered["totals"][AFFECTED] == 2
+        assert answered["requests"][0]["answer"] == "1901"

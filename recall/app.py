@@ -70,6 +70,7 @@ def review(store: Store, key: str) -> dict[str, Any]:
         }
     by_stock: dict[str, list[dict[str, Any]]] = {}
     invalidated: set[str] = set()
+    active_fields: set[tuple[str, str]] = set()
     for row in store.findings(key):
         finding = Finding.model_validate_json(row["payload"])
         if row["invalidated_at"]:
@@ -82,6 +83,8 @@ def review(store: Store, key: str) -> dict[str, Any]:
                     "explanation": "This evidence is from a superseded snapshot. Start a new review for current coverage.",
                 }
             )
+        if finding.field:
+            active_fields.add((row["stock_id"], finding.field))
         by_stock.setdefault(row["stock_id"], []).append(
             {
                 **finding.model_dump(),
@@ -105,6 +108,12 @@ def review(store: Store, key: str) -> dict[str, Any]:
         units.append({**unit.model_dump(), "status": status, "findings": findings})
     order = {AFFECTED: 0, NEEDS: 1, EXCLUDED: 2}
     units.sort(key=lambda unit: order[unit["status"]])
+    requests = store.requests(key)
+    visible_requests = [
+        dict(row)
+        for row in requests
+        if row["answer"] or (row["stock_id"], row["field"]) in active_fields
+    ]
     return {
         "id": key,
         "mode": record["mode"],
@@ -113,11 +122,9 @@ def review(store: Store, key: str) -> dict[str, Any]:
         "sources": list(source_by_id.values()),
         "units": units,
         "totals": totals,
-        "requests": [
-            dict(row)
-            for row in store.requests(key)
-            if row["answer"] or row["stock_id"] not in invalidated
-        ],
+        "requests": visible_requests,
+        "superseded_request": any(not row["answer"] for row in requests)
+        and all(row["answer"] for row in visible_requests),
         "drafts": [dict(row) for row in store.drafts(key) if row["stock_id"] not in invalidated],
         "events": [dict(row) for row in store.events(key)],
     }

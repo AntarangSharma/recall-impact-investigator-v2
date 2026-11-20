@@ -12,6 +12,7 @@
 {% if error %}<div class="banner error" role="alert">{{ error }}</div>{% endif %}
 {% if resumed %}<div class="banner success" role="status">Identifier saved. The affected findings were reevaluated.</div>{% endif %}
 {% if review.errors %}<details class="banner error"><summary>CSV issues ({{ review.errors|length }})</summary><ul>{% for error in review.errors %}<li>{{ error }}</li>{% endfor %}</ul></details>{% endif %}
+{% if review.superseded_request %}<div class="banner" role="status">The pending request uses a superseded snapshot. Start a new investigation to continue.</div>{% endif %}
 {% if review.state == "running" %}<div class="banner" role="status">Investigation in progress. Reload to check for findings.</div>{% endif %}
 <section class="totals" aria-label="Inventory totals">
   {% for key in ("affected_by_notice", "needs_information", "excluded_by_notice") %}
