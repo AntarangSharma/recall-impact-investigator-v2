@@ -1,0 +1,22 @@
+name: Checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  fixture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.9"
+      - run: make setup
+      - run: make check
+      - run: make test
+      - run: make eval-fixtures
+      - run: uv run --locked python -m scripts.check_text
+      - run: uv run --locked playwright install --with-deps chromium
+      - run: make browser

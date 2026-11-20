@@ -1,0 +1,19 @@
+{
+  "groups": [
+    {
+      "models": ["SAF-53D"],
+      "aliases": ["TXG-DT16E"],
+      "date_codes": ["1901"],
+      "serial": null,
+      "quote": "SAF-53D (TXG-DT16E) with date code 1901"
+    },
+    {
+      "models": ["SAF-53"],
+      "aliases": ["TXG-DS16"],
+      "date_codes": ["1903", "1904"],
+      "serial": null,
+      "quote": "SAF-53 (TXG-DS16) with date codes 1903 and 1904"
+    }
+  ],
+  "unsupported": []
+}

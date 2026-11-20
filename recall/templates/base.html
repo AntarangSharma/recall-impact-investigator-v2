@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Recall Investigator{% endblock %}</title>
+    <link rel="stylesheet" href="/static/app.css">
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <header class="top">
+      <div class="top-inner">
+        <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span> Recall Investigator</a>
+        <nav aria-label="Main"><a href="/"{% if review is not defined %} aria-current="page"{% endif %}>Investigations</a><a href="/docs">API</a></nav>
+      </div>
+    </header>
+    <main class="shell">{% block content %}{% endblock %}</main>
+    <footer class="footer">Source coverage is limited to selected U.S. CPSC air fryer and air fryer oven notices.</footer>
+  </body>
+</html>

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Review {{ review.id[:8]|upper }} | Recall Investigator{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="/">Investigations</a><span aria-hidden="true">/</span> {{ review.id[:8]|upper }}</div>
+<div class="pagehead review-head">
+  <div>
+    <h1>Inventory review</h1>
+    <p>{{ review.units|length }} {{ 'unit' if review.units|length == 1 else 'units' }} · {{ review.sources|length }} {{ 'notice' if review.sources|length == 1 else 'notices' }} · {{ 'Stored notices' if review.mode == 'fixture' else 'Live sources' }}</p>
+  </div>
+  <a class="secondary download" href="/investigations/{{ review.id }}/export.csv">Export CSV <span aria-hidden="true">↓</span></a>
+</div>
+{% if error %}<div class="banner error" role="alert">{{ error }}</div>{% endif %}
+{% if resumed %}<div class="banner success" role="status">Identifier saved. The affected findings were reevaluated.</div>{% endif %}
+{% if review.errors %}<details class="banner error"><summary>CSV issues ({{ review.errors|length }})</summary><ul>{% for error in review.errors %}<li>{{ error }}</li>{% endfor %}</ul></details>{% endif %}
+{% if review.state == "running" %}<div class="banner" role="status">Investigation in progress. Reload to check for findings.</div>{% endif %}
+<section class="totals" aria-label="Inventory totals">
+  {% for key in ("affected_by_notice", "needs_information", "excluded_by_notice") %}
+  <div class="total {{ key }}"><span class="dot"></span><span>{{ status_label[key] }}</span><strong>{{ review.totals[key] }}</strong></div>
+  {% endfor %}
+</section>
+<div class="layout review-layout">
+  <section class="panel queue">
+    <div class="section-head"><h2>Review queue</h2><span>Open a unit to see notice findings</span></div>
+    <div class="queue-labels" aria-hidden="true"><span>Stock unit</span><span>Location</span><span>Finding</span></div>
+    {% for unit in review.units %}
+    <details class="unit">
+      <summary aria-label="Evidence for {{ unit.stock_id }}">
+        <span class="unit-name"><strong class="mono">{{ unit.stock_id }}</strong><small>{{ unit.brand }} · {{ unit.model or 'Model needed' }}</small></span>
+        <span class="location">{{ unit.location }}</span>
+        <span class="pill {{ unit.status }}"><span class="dot"></span>{{ status_label[unit.status] }}</span>
+      </summary>
+      <div class="evidence">
+        <dl class="identifiers"><div><dt>Date code</dt><dd>{{ unit.date_code if unit.date_code else ('Blank' if unit.date_code is not none else 'Missing') }}</dd></div><div><dt>Serial number</dt><dd>{{ unit.serial_number if unit.serial_number else ('Blank' if unit.serial_number is not none else 'Missing') }}</dd></div></dl>
+        {% for finding in unit.findings %}
+        <article class="finding">
+          <div class="finding-title"><a href="{{ finding.notice.url }}">CPSC {{ finding.notice.id }} · {{ finding.notice.brand }}</a><span class="pill {{ finding.status }}"><span class="dot"></span>{{ status_label[finding.status] }}</span></div>
+          <p><strong>{{ reason_label.get(finding.reason, 'Unresolved') }}.</strong> {{ finding.explanation }}</p>
+          {% for span in finding.evidence %}<blockquote>{{ span.quote }}</blockquote>{% endfor %}
+          <small class="subtle">{{ finding.notice.date }}{% if finding.notice.hash %} · <code title="{{ finding.notice.hash }}">SHA-256 {{ finding.notice.hash[:12] }}</code>{% endif %}{% if finding.invalidated %} · Superseded evidence{% endif %}</small>
+        </article>
+        {% endfor %}
+      </div>
+    </details>
+    {% else %}<p class="empty">Findings will appear when the investigation finishes.</p>{% endfor %}
+  </section>
+  <aside class="stack">
+    {% for item in review.requests if not item.answer %}
+    <section class="panel side-card next-action">
+      <span class="overline">Identifier required</span>
+      <h2>{{ item.stock_id }} · {{ item.field|replace('_', ' ') }}</h2>
+      <p>{{ item.question }}</p>
+      <form method="post" action="/investigations/{{ review.id }}/answers/{{ item.id }}" data-loading="Resuming review…">
+        <label for="clarification">{{ item.field|replace('_', ' ')|capitalize }}</label>
+        <input id="clarification" name="value" maxlength="64" required autocomplete="off"{% if item.field == 'date_code' %} inputmode="numeric" placeholder="Four-digit code"{% endif %}>
+        <button class="primary">Save and resume</button>
+      </form>
+    </section>
+    {% else %}
+      {% if review.requests %}
+      <section class="panel side-card next-action resolved">
+        <span class="overline">Clarification complete</span>
+        <h2>Identifiers saved</h2>
+        <ul class="simple-list">{% for item in review.requests if item.answer %}<li>{{ item.stock_id }} <strong class="mono">{{ item.answer }}</strong></li>{% endfor %}</ul>
+      </section>
+      {% endif %}
+    {% endfor %}
+    <section class="panel side-card coverage-card">
+      <h2>Source coverage</h2>
+      {% for source in review.sources %}
+      <div class="source">
+        <a href="{{ source.url }}">{{ source.brand }} <span class="mono">{{ source.id }}</span></a>
+        <small>{{ source.date }}{% if review.mode == 'fixture' %} · Stored snapshot{% endif %}</small>
+        {% if source.stale %}<small class="attention">Snapshot older than 7 days</small>{% endif %}
+        {% if source.issue %}<small class="attention">{{ reason_label.get(source.issue, source.issue) }}{% if source.detail %}. {{ source.detail }}{% endif %}</small>{% endif %}
+      </div>
+      {% endfor %}
+      <p class="coverage-note">Each finding applies only to the cited notice and snapshot. Other recalls are outside this review.</p>
+    </section>
+  </aside>
+</div>
+<section class="panel supporting">
+  <details>
+    <summary>Supplier inquiry drafts <span>{{ review.drafts|length }}</span></summary>
+    {% if review.drafts %}
+    <a class="text-link" href="/investigations/{{ review.id }}/drafts.txt">Download drafts <span aria-hidden="true">↓</span></a>
+    {% for draft in review.drafts %}<pre>{{ draft.body }}</pre>{% endfor %}
+    {% else %}<p class="subtle">There are no supplier drafts for this review.</p>{% endif %}
+  </details>
+  <details>
+    <summary>Tool activity <span>{{ review.events|length }}</span></summary>
+    <ol class="events">{% for event in review.events %}<li><code>{{ event.tool }}</code><span>{{ event.summary }}</span></li>{% endfor %}</ol>
+  </details>
+</section>
+{% endblock %}

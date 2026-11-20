@@ -1,0 +1,12 @@
+{
+  "groups": [
+    {
+      "models": ["NS-AF34D2", "NS-AF5DSS2", "NS-AF5MSS2", "NS-AF8DBD2", "NS-AF10DBK2", "NS-AF10DSS2"],
+      "aliases": [],
+      "date_codes": [],
+      "serial": null,
+      "quote": "model numbers NS-AF34D2, NS-AF5DSS2, NS-AF5MSS2, NS-AF8DBD2, NS-AF10DBK2, and NS-AF10DSS2"
+    }
+  ],
+  "unsupported": []
+}

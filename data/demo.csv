@@ -1,0 +1,4 @@
+stock_id,brand,model,location,serial_number,date_code
+DEMO-001,Secura,SAF-53D,Receiving,,1901
+DEMO-002,Secura,SAF-53D,West stockroom,,1903
+DEMO-003,Secura,SAF-53D,Returns desk,
