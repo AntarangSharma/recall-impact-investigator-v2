@@ -1,0 +1,61 @@
+stock_id,notice,brand,model,date_code,serial_number,source_condition,expected,request,evidence
+S01,23-794,Secura,SAF-53D,1901,,,affected_by_notice,,SAF-53D (TXG-DT16E)
+S02,23-794,Secura,TXG-DT16E,1901,,,affected_by_notice,,SAF-53D (TXG-DT16E)
+S03,23-794,Secura,SAF-53,1903,,,affected_by_notice,,SAF-53 (TXG-DS16)
+S04,23-794,Secura,TXG-DS16,1904,,,affected_by_notice,,SAF-53 (TXG-DS16)
+S05,23-794, secura , saf-53 , 1904 ,,,affected_by_notice,,SAF-53 (TXG-DS16)
+S06,23-794,Secura,SAF-53D, 1901 ,000012,,affected_by_notice,,SAF-53D (TXG-DT16E)
+S07,23-794,SECURA,txg-ds16,1903,,,affected_by_notice,,SAF-53 (TXG-DS16)
+S08,23-794,Secura,SAF-53D,1903,,,excluded_by_notice,,SAF-53D (TXG-DT16E)
+S09,23-794,Secura,SAF-53,1901,,,excluded_by_notice,,SAF-53 (TXG-DS16)
+S10,23-794,Secura,TXG-DS16,1902,,,excluded_by_notice,,SAF-53 (TXG-DS16)
+S11,23-794,Secura,SAF-53,0901,,,excluded_by_notice,,SAF-53 (TXG-DS16)
+S12,23-794,Secura,SAF-53D-X,1901,,,excluded_by_notice,,SAF-53D (TXG-DT16E)
+S13,23-794,Secura,SAF53D,1901,,,excluded_by_notice,,SAF-53D (TXG-DT16E)
+S14,23-794,Secura,TXG-DT16,1901,,,excluded_by_notice,,SAF-53D (TXG-DT16E)
+S15,23-794,Secura,SAF-53D,<missing>,,,needs_information,date_code,SAF-53D (TXG-DT16E)
+S16,23-794,Secura,SAF-53,,,,needs_information,date_code,SAF-53 (TXG-DS16)
+S17,23-794,Secura,TXG-DS16,19?3,,,needs_information,date_code,SAF-53 (TXG-DS16)
+S18,23-794,Other,SAF-53D,1901,,,needs_information,,SAF-53D (TXG-DT16E)
+S19,23-794,Secura,SAF-53D,1901,,incomplete,needs_information,,
+S20,23-794,Secura,SAF-53,1903,,unsupported,needs_information,,
+C01,23-130,Cosori,CP158-AF,,,,affected_by_notice,,CP158-AF
+C02,23-130,Cosori,CP158-AF-R19,,,,affected_by_notice,,CP158-AF-R19
+C03,23-130,Cosori,CAF-P581S-AUSR,,,,affected_by_notice,,CAF-P581S-AUSR
+C04,23-130,Cosori,CO158-AF-RXB,,,,affected_by_notice,,CO158-AF-RXB
+C05,23-130,Cosori, cp258-af ,0001,0000,,affected_by_notice,,CP258-AF
+C06,23-130,Cosori,CP137-AF-RXW,,,,affected_by_notice,,CP137-AF-RXW
+C07,23-130,Cosori,CS158-AF-R19,,,,affected_by_notice,,CS158-AF-R19
+C08,23-130,Cosori,CP158-AF-RXB,,,,excluded_by_notice,,CP158-AF
+C09,23-130,Cosori,CAF-P581-AUS,,,,excluded_by_notice,,CP158-AF
+C10,23-130,Cosori,CP158AF,,,,excluded_by_notice,,CP158-AF
+C11,23-130,Cosori,CAF-P581-AUSR-2,,,,excluded_by_notice,,CP158-AF
+C12,23-130,Cosori,CP137-AF-R19,,,,excluded_by_notice,,CP158-AF
+C13,23-130,Cosori,CO158-AF-RXR,,,,excluded_by_notice,,CP158-AF
+C14,23-130,Cosori,CS158-AF-R019,,,,excluded_by_notice,,CP158-AF
+C15,23-130,Cosori,,,,,needs_information,model,CP158-AF
+C16,23-130,Cosori,CP158 AF,,,,needs_information,model,CP158-AF
+C17,23-130,Secura,CP158-AF,,,,needs_information,,CP158-AF
+C18,23-130,Cosori,CP158-AF,,U/?,unsupported,needs_information,,
+C19,23-130,Cosori,CP158-AF-RXB,,,incomplete,needs_information,,
+C20,23-130,Cosori,CP137-AF,,,conflicting,needs_information,,
+I01,24-159,Insignia,NS-AF34D2,,,,affected_by_notice,,NS-AF34D2
+I02,24-159,Insignia,NS-AF5DSS2,,,,affected_by_notice,,NS-AF5DSS2
+I03,24-159,Insignia,NS-AF5MSS2,,,,affected_by_notice,,NS-AF5MSS2
+I04,24-159,Insignia,NS-AF8DBD2,,,,affected_by_notice,,NS-AF8DBD2
+I05,24-159,Insignia,NS-AF10DBK2,,,,affected_by_notice,,NS-AF10DBK2
+I06,24-159,Insignia,NS-AF10DSS2,,,,affected_by_notice,,NS-AF10DSS2
+I07,24-159, insignia , ns-af10dss2 ,0001,,,affected_by_notice,,NS-AF10DSS2
+I08,24-159,Insignia,NS-AF34D,,,,excluded_by_notice,,NS-AF34D2
+I09,24-159,Insignia,NS-AF5DSS02,,,,excluded_by_notice,,NS-AF34D2
+I10,24-159,Insignia,NS-AF5MSS3,,,,excluded_by_notice,,NS-AF34D2
+I11,24-159,Insignia,NS-AF8DBD2-A,,,,excluded_by_notice,,NS-AF34D2
+I12,24-159,Insignia,NS-AF10DBK2X,,,,excluded_by_notice,,NS-AF34D2
+I13,24-159,Insignia,NSAF10DSS2,,,,excluded_by_notice,,NS-AF34D2
+I14,24-159,Insignia,NS.AF10DSS2,,,,excluded_by_notice,,NS-AF34D2
+I15,24-159,Insignia,,,,,needs_information,model,NS-AF34D2
+I16,24-159,Insignia,NS AF34D2,,,,needs_information,model,NS-AF34D2
+I17,24-159,Cosori,NS-AF34D2,,,,needs_information,,NS-AF34D2
+I18,24-159,Insignia,NS-AF34D2,,,unsupported,needs_information,,
+I19,24-159,Insignia,NS-AF34D,,,incomplete,needs_information,,
+I20,24-159,Insignia,NS-AF10DSS2,,,conflicting,needs_information,,

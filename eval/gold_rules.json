@@ -1,0 +1,21 @@
+{
+  "23-794": {
+    "split": "development",
+    "groups": [
+      {"models": ["SAF-53D"], "aliases": ["TXG-DT16E"], "date_codes": ["1901"], "serial": null},
+      {"models": ["SAF-53"], "aliases": ["TXG-DS16"], "date_codes": ["1903", "1904"], "serial": null}
+    ]
+  },
+  "23-130": {
+    "split": "development",
+    "groups": [
+      {"models": ["CP158-AF", "CP158-AF-R19", "CP158-AF-RXW", "CP158-AF-RXR", "CAF-P581-BUSR", "CAF-P581-AUSR", "CAF-P581-RUSR", "CP137-AF", "CP137-AF-RXB", "CP137-AF-RXR", "CP137-AF-RXW", "CS158-AF", "CS158-AF-RXB", "CS158-AF-R19", "CAF-P581S-BUSR", "CAF-P581S-RUSR", "CAF-P581S-AUSR", "CO137-AF", "CO158-AF", "CO158-AF-RXB", "CP258-AF"], "aliases": [], "date_codes": [], "serial": null}
+    ]
+  },
+  "24-159": {
+    "split": "holdout",
+    "groups": [
+      {"models": ["NS-AF34D2", "NS-AF5DSS2", "NS-AF5MSS2", "NS-AF8DBD2", "NS-AF10DBK2", "NS-AF10DSS2"], "aliases": [], "date_codes": [], "serial": null}
+    ]
+  }
+}
