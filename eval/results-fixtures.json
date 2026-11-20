@@ -1,0 +1,374 @@
+{
+  "mode": "scripted fixture",
+  "model_calls": 0,
+  "reserved_usd": 0.0,
+  "extraction": {
+    "overall": [
+      19,
+      19
+    ],
+    "per_notice": {
+      "23-794": {
+        "split": "development",
+        "correct_supported_fields": [
+          9,
+          9
+        ],
+        "validated": true,
+        "problem": ""
+      },
+      "23-130": {
+        "split": "development",
+        "correct_supported_fields": [
+          5,
+          5
+        ],
+        "validated": true,
+        "problem": ""
+      },
+      "24-159": {
+        "split": "holdout",
+        "correct_supported_fields": [
+          5,
+          5
+        ],
+        "validated": true,
+        "problem": ""
+      }
+    }
+  },
+  "all": {
+    "keyword_baseline": {
+      "cases": 60,
+      "correct": 38,
+      "confusion": {
+        "affected_by_notice": {
+          "affected_by_notice": 21,
+          "excluded_by_notice": 0,
+          "needs_information": 0
+        },
+        "excluded_by_notice": {
+          "affected_by_notice": 4,
+          "excluded_by_notice": 17,
+          "needs_information": 0
+        },
+        "needs_information": {
+          "affected_by_notice": 8,
+          "excluded_by_notice": 10,
+          "needs_information": 0
+        }
+      },
+      "affected_recall": [
+        21,
+        21
+      ],
+      "affected_precision": [
+        21,
+        33
+      ],
+      "incorrect_exclusions": [
+        10,
+        27
+      ],
+      "false_model_matches": [
+        0,
+        33
+      ],
+      "valid_case_citations": [
+        0,
+        52
+      ],
+      "correct_requests": [
+        0,
+        7
+      ],
+      "incorrect_or_unneeded_requests": [
+        0,
+        0
+      ],
+      "misclassified_case_ids": [
+        "S08",
+        "S09",
+        "S10",
+        "S11",
+        "S15",
+        "S16",
+        "S17",
+        "S18",
+        "S19",
+        "S20",
+        "C15",
+        "C16",
+        "C17",
+        "C18",
+        "C19",
+        "C20",
+        "I15",
+        "I16",
+        "I17",
+        "I18",
+        "I19",
+        "I20"
+      ]
+    },
+    "fixed_criteria": {
+      "cases": 60,
+      "correct": 60,
+      "confusion": {
+        "affected_by_notice": {
+          "affected_by_notice": 21,
+          "excluded_by_notice": 0,
+          "needs_information": 0
+        },
+        "excluded_by_notice": {
+          "affected_by_notice": 0,
+          "excluded_by_notice": 21,
+          "needs_information": 0
+        },
+        "needs_information": {
+          "affected_by_notice": 0,
+          "excluded_by_notice": 0,
+          "needs_information": 18
+        }
+      },
+      "affected_recall": [
+        21,
+        21
+      ],
+      "affected_precision": [
+        21,
+        21
+      ],
+      "incorrect_exclusions": [
+        0,
+        21
+      ],
+      "false_model_matches": [
+        0,
+        21
+      ],
+      "valid_case_citations": [
+        52,
+        52
+      ],
+      "correct_requests": [
+        7,
+        7
+      ],
+      "incorrect_or_unneeded_requests": [
+        0,
+        7
+      ],
+      "misclassified_case_ids": []
+    },
+    "end_to_end": {
+      "cases": 60,
+      "correct": 60,
+      "confusion": {
+        "affected_by_notice": {
+          "affected_by_notice": 21,
+          "excluded_by_notice": 0,
+          "needs_information": 0
+        },
+        "excluded_by_notice": {
+          "affected_by_notice": 0,
+          "excluded_by_notice": 21,
+          "needs_information": 0
+        },
+        "needs_information": {
+          "affected_by_notice": 0,
+          "excluded_by_notice": 0,
+          "needs_information": 18
+        }
+      },
+      "affected_recall": [
+        21,
+        21
+      ],
+      "affected_precision": [
+        21,
+        21
+      ],
+      "incorrect_exclusions": [
+        0,
+        21
+      ],
+      "false_model_matches": [
+        0,
+        21
+      ],
+      "valid_case_citations": [
+        52,
+        52
+      ],
+      "correct_requests": [
+        7,
+        7
+      ],
+      "incorrect_or_unneeded_requests": [
+        0,
+        7
+      ],
+      "misclassified_case_ids": []
+    }
+  },
+  "holdout": {
+    "keyword_baseline": {
+      "cases": 20,
+      "correct": 14,
+      "confusion": {
+        "affected_by_notice": {
+          "affected_by_notice": 7,
+          "excluded_by_notice": 0,
+          "needs_information": 0
+        },
+        "excluded_by_notice": {
+          "affected_by_notice": 0,
+          "excluded_by_notice": 7,
+          "needs_information": 0
+        },
+        "needs_information": {
+          "affected_by_notice": 2,
+          "excluded_by_notice": 4,
+          "needs_information": 0
+        }
+      },
+      "affected_recall": [
+        7,
+        7
+      ],
+      "affected_precision": [
+        7,
+        9
+      ],
+      "incorrect_exclusions": [
+        4,
+        11
+      ],
+      "false_model_matches": [
+        0,
+        9
+      ],
+      "valid_case_citations": [
+        0,
+        17
+      ],
+      "correct_requests": [
+        0,
+        2
+      ],
+      "incorrect_or_unneeded_requests": [
+        0,
+        0
+      ],
+      "misclassified_case_ids": [
+        "I15",
+        "I16",
+        "I17",
+        "I18",
+        "I19",
+        "I20"
+      ]
+    },
+    "fixed_criteria": {
+      "cases": 20,
+      "correct": 20,
+      "confusion": {
+        "affected_by_notice": {
+          "affected_by_notice": 7,
+          "excluded_by_notice": 0,
+          "needs_information": 0
+        },
+        "excluded_by_notice": {
+          "affected_by_notice": 0,
+          "excluded_by_notice": 7,
+          "needs_information": 0
+        },
+        "needs_information": {
+          "affected_by_notice": 0,
+          "excluded_by_notice": 0,
+          "needs_information": 6
+        }
+      },
+      "affected_recall": [
+        7,
+        7
+      ],
+      "affected_precision": [
+        7,
+        7
+      ],
+      "incorrect_exclusions": [
+        0,
+        7
+      ],
+      "false_model_matches": [
+        0,
+        7
+      ],
+      "valid_case_citations": [
+        17,
+        17
+      ],
+      "correct_requests": [
+        2,
+        2
+      ],
+      "incorrect_or_unneeded_requests": [
+        0,
+        2
+      ],
+      "misclassified_case_ids": []
+    },
+    "end_to_end": {
+      "cases": 20,
+      "correct": 20,
+      "confusion": {
+        "affected_by_notice": {
+          "affected_by_notice": 7,
+          "excluded_by_notice": 0,
+          "needs_information": 0
+        },
+        "excluded_by_notice": {
+          "affected_by_notice": 0,
+          "excluded_by_notice": 7,
+          "needs_information": 0
+        },
+        "needs_information": {
+          "affected_by_notice": 0,
+          "excluded_by_notice": 0,
+          "needs_information": 6
+        }
+      },
+      "affected_recall": [
+        7,
+        7
+      ],
+      "affected_precision": [
+        7,
+        7
+      ],
+      "incorrect_exclusions": [
+        0,
+        7
+      ],
+      "false_model_matches": [
+        0,
+        7
+      ],
+      "valid_case_citations": [
+        17,
+        17
+      ],
+      "correct_requests": [
+        2,
+        2
+      ],
+      "incorrect_or_unneeded_requests": [
+        0,
+        2
+      ],
+      "misclassified_case_ids": []
+    }
+  }
+}
